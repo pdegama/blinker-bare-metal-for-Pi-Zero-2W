@@ -1,1 +1,5 @@
 target
+blink.img
+boot.o
+kernel.o
+kernel.elf
