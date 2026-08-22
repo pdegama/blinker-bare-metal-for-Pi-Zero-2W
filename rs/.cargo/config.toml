@@ -1,0 +1,3 @@
+[build]
+# This forces Cargo to cross-compile for AArch64 bare-metal instead of Linux x86_64
+target = "aarch64-unknown-none"

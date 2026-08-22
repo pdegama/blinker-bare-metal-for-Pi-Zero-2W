@@ -1,0 +1,23 @@
+[package]
+name = "blinker"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[lib]
+crate-type = ["staticlib"]
+path = "src/main.rs"
+
+[[bin]]
+name = "blinker_bin"
+path = "src/main.rs"
+required-features = []
+
+[profile.dev]
+panic = "abort"
+debug = 0
+
+[profile.release]
+panic = "abort"
+debug = 0
