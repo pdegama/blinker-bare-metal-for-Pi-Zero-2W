@@ -1,6 +1,6 @@
 .globl _start
 _start:
-    bl get_el
+    # bl get_el
     bl check_stub_led
   	ldr w4, kernel_entry32
     br x4

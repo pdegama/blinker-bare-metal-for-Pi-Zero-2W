@@ -58,10 +58,15 @@ impl ElBlink {
     }
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn blink_el() {
+pub fn blink_el_ret() -> ElBlink {
     let mut leleds = ElBlink::new(Pin17, Pin27, Pin22, Pin21);
     leleds.blink();
+    return leleds;
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn blink_el() {
+    blink_el_ret();
 }
 
 #[unsafe(no_mangle)]

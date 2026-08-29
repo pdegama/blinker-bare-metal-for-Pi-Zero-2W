@@ -4,7 +4,7 @@
 use core::panic::PanicInfo;
 
 use crate::{
-    el::{blink_el, blink_el_with_delay},
+    el::{blink_el, blink_el_ret, blink_el_with_delay},
     gpio::GpioPin::{Pin6, Pin17, Pin21, Pin22, Pin27},
     util::small_delay,
 };
@@ -12,12 +12,13 @@ use crate::{
 mod el;
 mod gpio;
 mod stub;
+mod sys;
 mod util;
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn blinker() -> ! {
     small_delay();
-    blink_el_with_delay();
+    let blinkel = blink_el_ret();
 
     loop {}
 
