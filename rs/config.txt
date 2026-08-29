@@ -4,6 +4,8 @@ arm_64bit=1
 # Disable the standard Linux multi-core spin-table / boot process if handling your own SMP
 # core_freq=250
 
+armstub=stub.img
+
 # Point directly to your custom bare-metal kernel binary (e.g., kernel8.img)
 kernel=blink.img
 

@@ -3,3 +3,6 @@ blink.img
 boot.o
 kernel.o
 kernel.elf
+stub.o
+stub.elf
+stub.img

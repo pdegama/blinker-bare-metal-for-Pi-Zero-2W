@@ -21,8 +21,9 @@ sudo mount "$DEVICE" "$MOUNT_POINT"
 
 # Files to copy
 FILES=(
-  "blink.img"
   "config.txt"
+  "blink.img"
+  "stub.img"
 )
 
 # Copy files
