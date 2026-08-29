@@ -146,3 +146,9 @@ impl Pin {
         self.level = true;
     }
 }
+
+impl Drop for Pin {
+    fn drop(&mut self) {
+        self.set_for_input();
+    }
+}
