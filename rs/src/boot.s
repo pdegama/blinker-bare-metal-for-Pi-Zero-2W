@@ -4,25 +4,37 @@
 _start:
   mrs x1, mpidr_el1
   and x1, x1, #3
-  cbz x1, 2f
+  cbz x1, main
 
-1: 
+hang: 
   wfe
-  b 1b
+  b hang
 
-2:
+main:
   ldr x1, =_start
   mov sp, x1
 
+# clean bss sec
   ldr x1, =__bss_start
   ldr w2, =__bss_size
-
-3: 
-  cbz w2, 4f
+cleanbss: 
+  cbz w2, mainfn
   str xzr, [x1], #8
   sub w2, w2, #1
-  cbnz w2, 3b
+  cbnz w2, cleanbss
 
-4: 
+mainfn: 
   bl blinker
-  b 1b
+  b hang
+
+.global delay
+delay:
+  subs x0, x0, #1 
+  bne delay
+  ret
+
+.global get_el
+get_el:
+  mrs x0, CurrentEL
+  lsr x0, x0, #2
+  ret
