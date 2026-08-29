@@ -1,18 +1,23 @@
 #![no_std]
 #![no_main]
 
-use core::arch::asm;
 use core::panic::PanicInfo;
 
-use crate::gpio::GpioPin::{Pin6, Pin17, Pin21, Pin22, Pin27};
+use crate::{
+    el::{blink_el, blink_el_with_delay},
+    gpio::GpioPin::{Pin6, Pin17, Pin21, Pin22, Pin27},
+    util::small_delay,
+};
 
 mod el;
 mod gpio;
+mod stub;
+mod util;
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn blinker() -> ! {
-    let mut leleds = el::ElBlink::new(Pin17, Pin27, Pin22, Pin6);
-    leleds.blink();
+    small_delay();
+    blink_el_with_delay();
 
     loop {}
 
@@ -27,21 +32,15 @@ pub unsafe extern "C" fn blinker() -> ! {
         pin21.set_low();
         pin22.set_high();
         pin6.set_low();
-        for _ in 0..2500000 {
-            unsafe { asm!("nop") }
-        }
+        small_delay();
         pin21.set_low();
         pin22.set_low();
         pin6.set_high();
-        for _ in 0..2500000 {
-            unsafe { asm!("nop") }
-        }
+        small_delay();
         pin21.set_high();
         pin22.set_low();
         pin6.set_low();
-        for _ in 0..2500000 {
-            unsafe { asm!("nop") }
-        }
+        small_delay();
     }
 }
 

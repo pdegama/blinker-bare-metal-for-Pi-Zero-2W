@@ -6,3 +6,4 @@ kernel.elf
 stub.o
 stub.elf
 stub.img
+util.o

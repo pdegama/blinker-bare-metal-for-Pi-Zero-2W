@@ -1,8 +1,6 @@
+use crate::gpio::GpioPin::{Pin6, Pin17, Pin21, Pin22, Pin27};
 use crate::gpio::{self, GpioPin};
-
-unsafe extern "C" {
-    fn get_el() -> u64;
-}
+use crate::util::{get_el, small_delay};
 
 pub struct ElBlink {
     el0_led_pin: gpio::Pin,
@@ -58,4 +56,17 @@ impl ElBlink {
             self.el3_led_pin.set_high();
         }
     }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn blink_el() {
+    let mut leleds = ElBlink::new(Pin17, Pin27, Pin22, Pin21);
+    leleds.blink();
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn blink_el_with_delay() {
+    let mut leleds = ElBlink::new(Pin17, Pin27, Pin22, Pin21);
+    leleds.blink();
+    small_delay();
 }
