@@ -2,7 +2,7 @@
 _start:
     # bl get_el
     bl check_stub_led
-  	ldr w4, kernel_entry32
+  	ldr w4, kernel_entry
     br x4
 
 .ltorg
@@ -18,6 +18,6 @@ stub_version:
 	.word 0
 
 .org 0xfc
-.globl kernel_entry32
-kernel_entry32:
+.globl kernel_entry
+kernel_entry:
 	.word 0x0
