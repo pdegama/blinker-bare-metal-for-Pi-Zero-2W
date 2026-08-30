@@ -5,7 +5,7 @@ set -e
 # Usage: ./copy.sh /dev/sdb2
 
 DEVICE="$1"
-MOUNT_POINT="/mnt/sdcard"
+MOUNT_POINT="/mnt/sdcard2"
 
 if [ -z "$DEVICE" ]; then
   echo "Usage: $0 /dev/sdXn"

@@ -16,6 +16,8 @@ pub const GPSET0: GpioReg = GPIO_BASE + 0x1c;
 pub const GPSET1: GpioReg = GPIO_BASE + 0x20;
 pub const GPCLR0: GpioReg = GPIO_BASE + 0x28;
 pub const GPCLR1: GpioReg = GPIO_BASE + 0x2c;
+pub const GPLEV0: GpioReg = GPIO_BASE + 0x34;
+pub const GPLEV1: GpioReg = GPIO_BASE + 0x38;
 
 #[repr(u32)]
 #[derive(Clone, Copy)]
@@ -105,6 +107,11 @@ impl Pin {
         GPCLR0 + x
     }
 
+    fn get_lev_reg(&self) -> GpioReg {
+        let x = (self.pin as u32 / 32) * 0x04;
+        GPLEV0 + x
+    }
+
     pub fn set_for_input(&mut self) {
         self.set_for(Input);
     }
@@ -144,6 +151,16 @@ impl Pin {
         let r = self.get_set_reg();
         self.set_level(r);
         self.level = true;
+    }
+
+    pub fn get_level(&mut self) -> bool {
+        let reg = self.get_lev_reg();
+        let bit = (self.pin as u32) % 32;
+
+        let level = unsafe { (ptr::read_volatile(reg as *const u32) & (1 << bit)) != 0 };
+
+        self.level = level;
+        level
     }
 }
 

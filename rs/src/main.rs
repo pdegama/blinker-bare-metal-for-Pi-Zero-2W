@@ -5,7 +5,10 @@ use core::panic::PanicInfo;
 
 use crate::{
     el::{blink_el, blink_el_ret, blink_el_with_delay},
-    gpio::GpioPin::{Pin6, Pin17, Pin21, Pin22, Pin27},
+    gpio::{
+        GPSET0,
+        GpioPin::{Pin5, Pin6, Pin12, Pin17, Pin21, Pin22, Pin26, Pin27},
+    },
     util::small_delay,
 };
 
@@ -17,32 +20,31 @@ mod util;
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn blinker() -> ! {
+    let mut pin26 = gpio::Pin::new(Pin26);
+    let mut pin17 = gpio::Pin::new(Pin17);
+    let mut pin12 = gpio::Pin::new(Pin12);
+    pin26.set_for_output();
+    pin17.set_for_output();
+    pin12.set_for_input();
+
     small_delay();
     let blinkel = blink_el_ret();
 
-    loop {}
-
-    let mut pin21 = gpio::Pin::new(Pin21);
-    let mut pin22 = gpio::Pin::new(Pin22);
-    let mut pin6 = gpio::Pin::new(Pin6);
-    pin21.set_for_output();
-    pin22.set_for_output();
-    pin6.set_for_output();
+    let mut prev_l = false;
 
     loop {
-        pin21.set_low();
-        pin22.set_high();
-        pin6.set_low();
-        small_delay();
-        pin21.set_low();
-        pin22.set_low();
-        pin6.set_high();
-        small_delay();
-        pin21.set_high();
-        pin22.set_low();
-        pin6.set_low();
-        small_delay();
+        let l = pin12.get_level();
+        if l != prev_l {
+            if l {
+                pin26.set_high();
+            } else {
+                pin26.set_low();
+            }
+            prev_l = l
+        }
     }
+
+    loop {}
 }
 
 #[panic_handler]
