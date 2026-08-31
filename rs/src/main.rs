@@ -26,6 +26,9 @@ pub unsafe extern "C" fn blinker() -> ! {
     pin26.set_for_output();
     pin17.set_for_output();
     pin12.set_for_input();
+    pin12.set_pull_up();
+
+    util::wait_cycle(200);
 
     small_delay();
     let blinkel = blink_el_ret();

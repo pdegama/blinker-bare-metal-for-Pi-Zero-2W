@@ -1,6 +1,12 @@
-use core::ptr::{self, read_volatile};
+use core::ptr::{self, read_volatile, write_volatile};
 
-use crate::gpio::GpioMode::{Input, Output};
+use crate::{
+    gpio::{
+        GpioMode::{Input, Output},
+        PullUpDown::{Down, Up},
+    },
+    util,
+};
 
 type GpioReg = u32;
 
@@ -18,6 +24,14 @@ pub const GPCLR0: GpioReg = GPIO_BASE + 0x28;
 pub const GPCLR1: GpioReg = GPIO_BASE + 0x2c;
 pub const GPLEV0: GpioReg = GPIO_BASE + 0x34;
 pub const GPLEV1: GpioReg = GPIO_BASE + 0x38;
+pub const GPEDS0: GpioReg = GPIO_BASE + 0x40;
+pub const GPEDS1: GpioReg = GPIO_BASE + 0x44;
+pub const GPREN0: GpioReg = GPIO_BASE + 0x4c;
+pub const GPREN1: GpioReg = GPIO_BASE + 0x50;
+// ..
+pub const GPPUD: GpioReg = GPIO_BASE + 0x94;
+pub const GPPUDCLK0: GpioReg = GPIO_BASE + 0x98;
+pub const GPPUDCLK1: GpioReg = GPIO_BASE + 0x9c;
 
 #[repr(u32)]
 #[derive(Clone, Copy)]
@@ -83,6 +97,11 @@ pub struct Pin {
     level: bool,
 }
 
+enum PullUpDown {
+    Up,
+    Down,
+}
+
 impl Pin {
     pub fn new(pin: GpioPin) -> Self {
         Self {
@@ -110,6 +129,11 @@ impl Pin {
     fn get_lev_reg(&self) -> GpioReg {
         let x = (self.pin as u32 / 32) * 0x04;
         GPLEV0 + x
+    }
+
+    fn get_pull_clk_reg(&self) -> GpioReg {
+        let x = (self.pin as u32 / 32) * 0x04;
+        GPPUDCLK0 + x
     }
 
     pub fn set_for_input(&mut self) {
@@ -161,6 +185,35 @@ impl Pin {
 
         self.level = level;
         level
+    }
+
+    fn set_pull_up_down(&mut self, up_down: PullUpDown) {
+        let bit = (self.pin as u32) % 32;
+        let clk_reg = self.get_pull_clk_reg();
+        let ctl_reg = GPPUD;
+
+        unsafe {
+            ptr::write_volatile(
+                ctl_reg as *mut u32,
+                match up_down {
+                    Up => 0b10,
+                    Down => 0b01,
+                },
+            );
+            util::wait_cycle(150);
+            ptr::write_volatile(clk_reg as *mut u32, 0b1 << bit);
+            util::wait_cycle(150);
+            ptr::write_volatile(ctl_reg as *mut u32, 0b00);
+            ptr::write_volatile(clk_reg as *mut u32, 0b00);
+        }
+    }
+
+    pub fn set_pull_up(&mut self) {
+        self.set_pull_up_down(Up);
+    }
+
+    pub fn set_pull_down(&mut self) {
+        self.set_pull_up_down(Down);
     }
 }
 
