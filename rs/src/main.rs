@@ -7,19 +7,41 @@ use crate::{
     el::{blink_el, blink_el_ret, blink_el_with_delay},
     gpio::{
         GPSET0,
-        GpioPin::{Pin5, Pin6, Pin12, Pin17, Pin21, Pin22, Pin26, Pin27},
+        GpioPin::{Pin5, Pin6, Pin12, Pin17, Pin21, Pin22, Pin23, Pin26, Pin27},
     },
-    util::small_delay,
+    util::{small_delay, wait_cycle},
 };
 
 mod el;
 mod gpio;
+mod irq;
 mod stub;
 mod sys;
 mod util;
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn blinker() -> ! {
+    irq::irq_init_vectors();
+    irq::irq_enable();
+    irq::setup_gpio_irq();
+    // irq::irq_enable();
+
+    let blinkel = blink_el_ret();
+
+    let mut p17 = gpio::Pin::new(Pin17);
+    let mut p27 = gpio::Pin::new(Pin27);
+    p17.set_for_output();
+    p27.set_for_output();
+
+    loop {
+        p17.set_high();
+        p27.set_low();
+        wait_cycle(300000);
+        p17.set_low();
+        p27.set_high();
+        wait_cycle(300000);
+    }
+
     let mut pin26 = gpio::Pin::new(Pin26);
     let mut pin17 = gpio::Pin::new(Pin17);
     let mut pin12 = gpio::Pin::new(Pin12);
@@ -27,11 +49,6 @@ pub unsafe extern "C" fn blinker() -> ! {
     pin17.set_for_output();
     pin12.set_for_input();
     pin12.set_pull_up();
-
-    util::wait_cycle(200);
-
-    small_delay();
-    let blinkel = blink_el_ret();
 
     let mut prev_l = false;
 

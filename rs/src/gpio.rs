@@ -10,6 +10,7 @@ use crate::{
 
 type GpioReg = u32;
 
+// pub const PBASE: GpioReg = 0xfe000000;
 pub const PBASE: GpioReg = 0x3f000000;
 pub const GPIO_BASE: GpioReg = PBASE + 0x200000;
 pub const GPFSEL0: GpioReg = GPIO_BASE + 0x00;
@@ -28,7 +29,9 @@ pub const GPEDS0: GpioReg = GPIO_BASE + 0x40;
 pub const GPEDS1: GpioReg = GPIO_BASE + 0x44;
 pub const GPREN0: GpioReg = GPIO_BASE + 0x4c;
 pub const GPREN1: GpioReg = GPIO_BASE + 0x50;
-// ..
+pub const GPFEN0: GpioReg = GPIO_BASE + 0x58;
+pub const GPFEN1: GpioReg = GPIO_BASE + 0x5c;
+
 pub const GPPUD: GpioReg = GPIO_BASE + 0x94;
 pub const GPPUDCLK0: GpioReg = GPIO_BASE + 0x98;
 pub const GPPUDCLK1: GpioReg = GPIO_BASE + 0x9c;
@@ -136,6 +139,21 @@ impl Pin {
         GPPUDCLK0 + x
     }
 
+    fn get_ev_reg(&self) -> GpioReg {
+        let x = (self.pin as u32 / 32) * 0x04;
+        GPEDS0 + x
+    }
+
+    fn get_rising_eg_reg(&self) -> GpioReg {
+        let x = (self.pin as u32 / 32) * 0x04;
+        GPREN0 + x
+    }
+
+    fn get_falling_eg_reg(&self) -> GpioReg {
+        let x = (self.pin as u32 / 32) * 0x04;
+        GPFEN0 + x
+    }
+
     pub fn set_for_input(&mut self) {
         self.set_for(Input);
     }
@@ -187,7 +205,7 @@ impl Pin {
         level
     }
 
-    fn set_pull_up_down(&mut self, up_down: PullUpDown) {
+    fn set_pull_up_down(&self, up_down: PullUpDown) {
         let bit = (self.pin as u32) % 32;
         let clk_reg = self.get_pull_clk_reg();
         let ctl_reg = GPPUD;
@@ -208,17 +226,54 @@ impl Pin {
         }
     }
 
-    pub fn set_pull_up(&mut self) {
+    pub fn set_pull_up(&self) {
         self.set_pull_up_down(Up);
     }
 
-    pub fn set_pull_down(&mut self) {
+    pub fn set_pull_down(&self) {
         self.set_pull_up_down(Down);
+    }
+
+    pub fn set_falling_eg(&self) {
+        let bit = (self.pin as u32) % 32;
+        let reg = self.get_falling_eg_reg();
+        unsafe {
+            let v = ptr::read_volatile(reg as *mut u32);
+            ptr::write_volatile(reg as *mut u32, v | 0b1 << bit);
+        }
+    }
+
+    pub fn set_risining_eg(&self) {
+        let bit = (self.pin as u32) % 32;
+        let reg = self.get_rising_eg_reg();
+        unsafe {
+            let v = ptr::read_volatile(reg as *mut u32);
+            ptr::write_volatile(reg as *mut u32, v | 0b1 << bit);
+        }
+    }
+
+    pub fn is_event(&self) -> bool {
+        let bit = (self.pin as u32) % 32;
+        let reg = self.get_ev_reg();
+
+        unsafe {
+            let v = ptr::read_volatile(reg as *mut u32);
+            let x = v & 0b1 << bit;
+            x > 0
+        }
+    }
+
+    pub fn clear_event(&self) {
+        let bit = (self.pin as u32) % 32;
+        let reg = self.get_ev_reg();
+        unsafe {
+            ptr::write_volatile(reg as *mut u32, 0b1 << bit);
+        }
     }
 }
 
 impl Drop for Pin {
     fn drop(&mut self) {
-        self.set_for_input();
+        // self.set_for_input();
     }
 }
