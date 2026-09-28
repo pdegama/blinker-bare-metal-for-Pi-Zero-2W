@@ -1,0 +1,37 @@
+use crate::{
+    ic595::Ic595,
+    mini_uart::{self, uart_send},
+    table,
+};
+
+static mut sr: Option<Ic595> = None;
+
+pub fn run_user() {
+    unsafe {
+        set_uart_handler();
+
+        let data: u8 = 0b10011011;
+        let mut x = Ic595::new();
+        sr = Some(x);
+        if let Some(s) = sr {
+            s.load_shift(data);
+        }
+    }
+}
+
+fn handle_msg_from_are(msg: u8) {
+    unsafe {
+        if let Some(c) = table::uart_channel {
+            c("Get: ");
+            uart_send(msg);
+            c("\n");
+        }
+    }
+}
+
+fn set_uart_handler() {
+    unsafe {
+        table::uart_channel = Some(mini_uart::uart_send_string);
+        table::uart_handler = Some(handle_msg_from_are);
+    }
+}

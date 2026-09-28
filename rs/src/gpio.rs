@@ -3,16 +3,14 @@ use core::ptr::{self, read_volatile, write_volatile};
 use crate::{
     gpio::{
         GpioMode::{Input, Output},
-        PullUpDown::{Down, Up},
+        PullUpDown::{Disable, Down, Up},
     },
-    util,
+    peripherals, util,
 };
 
-type GpioReg = u32;
+type GpioReg = peripherals::PerReg;
 
-// pub const PBASE: GpioReg = 0xfe000000;
-pub const PBASE: GpioReg = 0x3f000000;
-pub const GPIO_BASE: GpioReg = PBASE + 0x200000;
+pub const GPIO_BASE: GpioReg = peripherals::PBASE + 0x200000;
 pub const GPFSEL0: GpioReg = GPIO_BASE + 0x00;
 pub const GPFSEL1: GpioReg = GPIO_BASE + 0x04;
 pub const GPFSEL2: GpioReg = GPIO_BASE + 0x08;
@@ -101,6 +99,7 @@ pub struct Pin {
 }
 
 enum PullUpDown {
+    Disable,
     Up,
     Down,
 }
@@ -214,6 +213,7 @@ impl Pin {
             ptr::write_volatile(
                 ctl_reg as *mut u32,
                 match up_down {
+                    Disable => 0b00,
                     Up => 0b10,
                     Down => 0b01,
                 },
@@ -232,6 +232,10 @@ impl Pin {
 
     pub fn set_pull_down(&self) {
         self.set_pull_up_down(Down);
+    }
+
+    pub fn set_pull_disable(&self) {
+        self.set_pull_up_down(Disable);
     }
 
     pub fn set_falling_eg(&self) {
